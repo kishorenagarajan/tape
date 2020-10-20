@@ -33,8 +33,6 @@ from .modeling_utils import LayerNorm
 from .modeling_utils import MLMHead
 from .modeling_utils import ValuePredictionHead
 from .modeling_utils import SequenceClassificationHead
-# This was added to import the new head
-from .modeling_utils import ProteinDomainClassificationHead 
 from .modeling_utils import SequenceToSequenceClassificationHead
 from .modeling_utils import PairwiseContactPredictionHead
 from ..registry import registry
