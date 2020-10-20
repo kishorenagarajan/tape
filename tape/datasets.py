@@ -559,18 +559,15 @@ class ProteinDomainDataset(Dataset):
                  tokenizer: Union[str, TAPETokenizer] = 'iupac',
                  in_memory: bool = False):
         # need to change the labels by looking at the pfam data
-        if split not in ('train', 'valid', 'test_fold_holdout',
-                         'test_family_holdout', 'test_superfamily_holdout'):
+        if split not in ('train', 'valid', 'holdout'):
             raise ValueError(f"Unrecognized split: {split}. Must be one of "
-                             f"['train', 'valid', 'test_fold_holdout', "
-                             f"'test_family_holdout', 'test_superfamily_holdout']")
+                             f"['train', 'valid', 'holdout',")
         if isinstance(tokenizer, str):
             tokenizer = TAPETokenizer(vocab=tokenizer)
         self.tokenizer = tokenizer
 
         data_path = Path(data_path)
-        # need to change the dataset below
-        data_file = f'remote_homology/remote_homology_{split}.lmdb'
+        data_file = f'pfam/pfam_{split}.lmdb'
         self.data = dataset_factory(data_path / data_file, in_memory)
     
     def __len__(self) -> int:
