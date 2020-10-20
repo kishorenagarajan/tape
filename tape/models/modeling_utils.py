@@ -812,7 +812,6 @@ class SequenceClassificationHead(nn.Module):
 
         return outputs  # (loss), logits
 
-
 class SequenceToSequenceClassificationHead(nn.Module):
 
     def __init__(self,
