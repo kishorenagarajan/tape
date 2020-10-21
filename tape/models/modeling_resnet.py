@@ -290,6 +290,7 @@ class ProteinResNetForValuePrediction(ProteinResNetAbstractModel):
         return outputs
 
 
+@registry.register_task_model('protein_domain', 'resnet')
 @registry.register_task_model('remote_homology', 'resnet')
 class ProteinResNetForSequenceClassification(ProteinResNetAbstractModel):
 
