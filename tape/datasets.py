@@ -571,7 +571,7 @@ class ProteinDomainDataset(Dataset):
         self.data = dataset_factory(data_path / data_file, in_memory)
     
     def __len__(self) -> int:
-        return len(self.data)
+        return 100000;
 
     def __getitem__(self, index: int):
         item = self.data[index]
