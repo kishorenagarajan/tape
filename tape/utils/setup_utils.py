@@ -10,7 +10,7 @@ import torch.distributed as dist
 from torch.utils.data import DataLoader, RandomSampler, Dataset
 from torch.utils.data.distributed import DistributedSampler
 from ..optimization import AdamW
-from apex.optimizers import FusedLAMB
+
 from ..over9000 import RangerLars
 
 from ..registry import registry
@@ -84,7 +84,7 @@ def setup_optimizer(model,
         },
     ]
 
-    optimizer = RangerLars(optimizer_grouped_parameters, lr=learning_rate)
+    optimizer = AdamW(optimizer_grouped_parameters, lr=learning_rate)
     return optimizer
 
 
