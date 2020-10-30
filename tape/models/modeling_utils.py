@@ -812,6 +812,29 @@ class SequenceClassificationHead(nn.Module):
 
         return outputs  # (loss), logits
 
+################### CKM CODE ###################
+
+class MultiLabelClassificationHead(nn.Module):
+    def __init__(self, hidden_size: int, num_labels: int):
+        super().__init__()
+        self.classify = SimpleMLP(hidden_size, 512, num_labels)
+
+    def forward(self, pooled_output, targets=None):
+        logits = self.classify(pooled_output)
+        outputs = (logits,)
+
+        if targets is not None:
+            loss_fct = nn.BCEWithLogitsLoss()
+            classification_loss = loss_fct(logits, targets)
+            metrics = {'accuracy': accuracy(logits, targets)}
+            loss_and_metrics = (classification_loss, metrics)
+            outputs = (loss_and_metrics,) + outputs
+
+        return outputs  # (loss), logits
+
+################# END CKM CODE #################
+
+
 class SequenceToSequenceClassificationHead(nn.Module):
 
     def __init__(self,
