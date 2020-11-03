@@ -587,8 +587,9 @@ class ProteinDomainDataset(Dataset):
     def collate_fn(self, batch: List[Tuple[Any, ...]]) -> Dict[str, torch.Tensor]:
         input_ids, input_mask, family_label = tuple(zip(*batch))
         
-        random_choices_list = list(range(18259)).remove(family_label)
-        family_label = [family_label] + random.sample(random_choices_list, 4) # this adds random numbers onto the end to simulate multiple domains
+#         random_choices_list = list(range(18259)).remove(family_label)
+#         family_label = [family_label] + random.sample(random_choices_list, 4) # this adds random numbers onto the end to simulate multiple domains
+        print(family_label, type(family_label))
 
         input_ids = torch.from_numpy(pad_sequences(input_ids, 0))
         input_mask = torch.from_numpy(pad_sequences(input_mask, 0))
