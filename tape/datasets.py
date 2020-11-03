@@ -549,9 +549,12 @@ class RemoteHomologyDataset(Dataset):
                 'input_mask': input_mask,
                 'targets': fold_label}
 
+################### CKM CODE ###################
+
 #register in BERT for testing until other model
 @registry.register_task('protein_domain', num_labels=18259)
 class ProteinDomainDataset(Dataset):
+
 
     def __init__(self,
                  data_path: Union[str, Path],
@@ -583,6 +586,9 @@ class ProteinDomainDataset(Dataset):
     # Might need to add another parameter to collate? What do we need to do to this method?
     def collate_fn(self, batch: List[Tuple[Any, ...]]) -> Dict[str, torch.Tensor]:
         input_ids, input_mask, family_label = tuple(zip(*batch))
+
+        family_label = [family_label] + random.sample(range(18259).remove(family_label), 4) # this adds random numbers onto the end to simulate multiple domains
+
         input_ids = torch.from_numpy(pad_sequences(input_ids, 0))
         input_mask = torch.from_numpy(pad_sequences(input_mask, 0))
         family_label = torch.LongTensor(family_label)  # type: ignore
@@ -590,6 +596,8 @@ class ProteinDomainDataset(Dataset):
         return {'input_ids': input_ids,
                 'input_mask': input_mask,
                 'targets': family_label}
+
+################# END CKM CODE #################
 
 
 @registry.register_task('contact_prediction')
