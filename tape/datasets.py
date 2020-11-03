@@ -586,8 +586,9 @@ class ProteinDomainDataset(Dataset):
     # Might need to add another parameter to collate? What do we need to do to this method?
     def collate_fn(self, batch: List[Tuple[Any, ...]]) -> Dict[str, torch.Tensor]:
         input_ids, input_mask, family_label = tuple(zip(*batch))
-
-        family_label = [family_label] + random.sample(range(18259).remove(family_label), 4) # this adds random numbers onto the end to simulate multiple domains
+        
+        random_choices_list = list(range(18259)).remove(family_label)
+        family_label = [family_label] + random.sample(random_choices_list, 4) # this adds random numbers onto the end to simulate multiple domains
 
         input_ids = torch.from_numpy(pad_sequences(input_ids, 0))
         input_mask = torch.from_numpy(pad_sequences(input_mask, 0))
