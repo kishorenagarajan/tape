@@ -590,23 +590,27 @@ class ProteinDomainDataset(Dataset):
         random_choices_list = list(range(18259))
         random_choices_list.remove(family_label[0])
         random_choices_list.remove(family_label[1])
-        random_choices_list = random.sample(random_choices_list, 8)
+        random_choices_list1 = random.sample(random_choices_list, 8)
+        random_choices_list2 = random.sample(random_choices_list, 8)
 
-        family_label_indexes = list(family_label) + random_choices_list
-        family_label_multihot = [0]*18259
-        for index in family_label_indexes:
-            family_label_multihot[index] = 1
+        family_label_indexes1 = list(family_label) + random_choices_list1
+        family_label_indexes2 = list(family_label) + random_choices_list2
+        family_label_multihot = [[0]*18259, [0]*18259]
+        for index in family_label_indexes1:
+            family_label_multihot[0][index] = 1
+        for index in family_label_indexes2:
+            family_label_multihot[1][index] = 1
 
         # family_label = [family_label] + [tuple(random.sample(random_choices_list, 2))] # this adds random numbers onto the end to simulate multiple domains
-        print(family_label, type(family_label))
+        # print(family_label, type(family_label))
 
         input_ids = torch.from_numpy(pad_sequences(input_ids, 0))
         input_mask = torch.from_numpy(pad_sequences(input_mask, 0))
-        family_label = torch.LongTensor(family_label)  # type: ignore
+        family_label = torch.LongTensor(family_label_multihot)  # type: ignore
 
         return {'input_ids': input_ids,
                 'input_mask': input_mask,
-                'targets': family_label_multihot}
+                'targets': family_label}
 
 ################# END CKM CODE #################
 
