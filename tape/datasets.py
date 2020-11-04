@@ -587,18 +587,19 @@ class ProteinDomainDataset(Dataset):
     def collate_fn(self, batch: List[Tuple[Any, ...]]) -> Dict[str, torch.Tensor]:
         input_ids, input_mask, family_label = tuple(zip(*batch))
 
-        fn_domain = range(18259)
+        fn_domain = list(range(18259))
         for class_num in family_label:
-            fn_domain.remove(class_num)
+            if class_num in fn_domain:
+            	fn_domain.remove(class_num)
 
-        family_label_multihot = [[0]*18259, [0]*18259]
+        family_label_multihot = [[0]*18259]*len(family_label)
         for label in family_label:
             index = family_label.index(label)
             family_label_multihot[index][family_label[index]] = 1
 
         input_ids = torch.from_numpy(pad_sequences(input_ids, 0))
         input_mask = torch.from_numpy(pad_sequences(input_mask, 0))
-        family_label = torch.LongTensor(family_label_multihot)  # type: ignore
+        family_label = torch.HalfTensor(family_label_multihot)  # type: ignore
 
         return {'input_ids': input_ids,
                 'input_mask': input_mask,

@@ -826,7 +826,8 @@ class MultiLabelClassificationHead(nn.Module):
         if targets is not None:
             loss_fct = nn.BCEWithLogitsLoss()
             classification_loss = loss_fct(logits, targets)
-            metrics = {'accuracy': accuracy(logits, targets)}
+#            metrics = {'accuracy': accuracy(logits, targets)}
+            metrics = {}
             loss_and_metrics = (classification_loss, metrics)
             outputs = (loss_and_metrics,) + outputs
 
