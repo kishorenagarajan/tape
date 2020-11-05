@@ -627,6 +627,57 @@ def accuracy(logits, labels, ignore_index: int = -100):
         correct = (predictions == labels) * valid_mask
         return correct.sum().float() / valid_mask.sum().float()
 
+######################## DR GOODSON'S CODE ########################
+
+def optimize_thresholds(c: torch.Tensor, y: torch.Tensor):
+
+    best_t = torch.zeros(c.shape[0])
+    best_metrics = torch.zeros((c.shape[0], 4))
+    probs = torch.sigmoid(c.float())
+    for t in range(1, 100):
+        t = t / 100
+        metrics = scores(y, (probs > t).float())
+        for i, (tscore, pre_m) in enumerate(zip(metrics.T, best_metrics)):
+            if tscore[0] > pre_m[0]:
+                best_metrics[i], best_t[i] = tscore, t
+    return best_t, best_metrics
+
+
+
+def scores(y_true: torch.Tensor, y_pred: torch.Tensor) -> torch.Tensor:
+    '''Calculate F1 score. Can work with gpu tensors
+    The original implmentation is written by Michal Haltuf on Kaggle.
+    Returns
+    -------
+    torch.Tensor
+        `ndim` == 1. 0 <= val <= 1
+    Reference
+    ---------
+    - https://www.kaggle.com/rejpalcz/best-loss-function-for-f1-score-metric
+    - https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html#sklearn.metrics.f1_score
+    - https://discuss.pytorch.org/t/calculating-precision-recall-and-f1-score-in-case-of-multi-label-classification/28265/6
+    '''
+
+    assert y_true.ndim in (1,2)
+    assert y_pred.ndim in (1,2)
+
+    tp = (y_true * y_pred).sum(-1).to(torch.float32)
+    tn = ((1 - y_true) * (1 - y_pred)).sum(-1).to(torch.float32)
+    fp = ((1 - y_true) * y_pred).sum(-1).to(torch.float32)
+    fn = (y_true * (1 - y_pred)).sum(-1).to(torch.float32)
+
+    epsilon = 1e-7
+
+    precision = tp / (tp + fp + epsilon)
+    recall = tp / (tp + fn + epsilon)
+    accuracy = (tp + tn) / (tp + tn + fp + fn)
+
+    f1 = 2 * (precision * recall) / (precision + recall + epsilon)
+
+    return torch.vstack((f1, precision, recall, accuracy))
+
+######################## DR GOODSON'S CODE ########################
+
 
 def gelu(x):
     """Implementation of the gelu activation function.
@@ -827,7 +878,18 @@ class MultiLabelClassificationHead(nn.Module):
             loss_fct = nn.BCEWithLogitsLoss()
             classification_loss = loss_fct(logits, targets)
 #            metrics = {'accuracy': accuracy(logits, targets)}
-            metrics = {}
+
+            # Roughly calculate best thresholds per-sequence based on F1-score
+            thresholds, metrics = optimize_thresholds(logits, targets)
+
+            f1, precision, recall, accuracy = metrics.mean(0)
+
+            metrics = {
+                'f1_score': f1,
+                'precision': precision,
+                'recall': recall,
+                'accuracy': accuracy,
+            }
             loss_and_metrics = (classification_loss, metrics)
             outputs = (loss_and_metrics,) + outputs
 

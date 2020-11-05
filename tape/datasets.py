@@ -554,8 +554,6 @@ class RemoteHomologyDataset(Dataset):
 #register in BERT for testing until other model
 @registry.register_task('protein_domain', num_labels=18259)
 class ProteinDomainDataset(Dataset):
-
-
     def __init__(self,
                  data_path: Union[str, Path],
                  split: str,
@@ -590,7 +588,7 @@ class ProteinDomainDataset(Dataset):
         fn_domain = list(range(18259))
         for class_num in family_label:
             if class_num in fn_domain:
-            	fn_domain.remove(class_num)
+                fn_domain.remove(class_num)
 
         family_label_multihot = [[0]*18259]*len(family_label)
         for label in family_label:
