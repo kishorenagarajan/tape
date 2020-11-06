@@ -128,6 +128,7 @@ class LMDBDataset(Dataset):
         if not data_file.exists():
             raise FileNotFoundError(data_file)
 
+        self._data_file = str(data_file)
         env = lmdb.open(str(data_file), max_readers=1, readonly=True,
                         lock=False, readahead=False, meminit=False)
 
@@ -159,6 +160,16 @@ class LMDBDataset(Dataset):
                 if self._in_memory:
                     self._cache[index] = item
         return item
+
+    def __getstate__(self):
+        dict = self.__dict__.copy()
+        del dict['_env']
+        return dict
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._env = lmdb.open(self._data_file, max_readers=1, readonly=True,
+                              lock=False, readahead=False, meminit=False)
 
 
 class JSONDataset(Dataset):
