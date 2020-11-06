@@ -568,7 +568,7 @@ class ProteinDomainDataset(Dataset):
         self.tokenizer = tokenizer
 
         data_path = Path(data_path)
-        data_file = f'pfam/pfam_{split}.lmdb'
+        data_file = f'domain_{split}.lmdb'
         self.data = dataset_factory(data_path / data_file, in_memory)
     
     def __len__(self) -> int:
@@ -579,7 +579,7 @@ class ProteinDomainDataset(Dataset):
         token_ids = self.tokenizer.encode(item['primary'])
         input_mask = np.ones_like(token_ids)
     # Changed fold_label in remote homology dataset to family_label (MAY NEED TO CHANGE to just "family")
-        return token_ids, input_mask, item['family']
+        return token_ids, input_mask, item['domains']
     
     # Might need to add another parameter to collate? What do we need to do to this method?
     def collate_fn(self, batch: List[Tuple[Any, ...]]) -> Dict[str, torch.Tensor]:
@@ -598,7 +598,7 @@ class ProteinDomainDataset(Dataset):
                 family_label_multihot_part[family_label[index]] = 1
             elif isinstance(label, list):
                 for elem in label:
-                    index = family_label.index(elem)
+                    index = label.index(elem)
                     family_label_multihot_part[label[index]] = 1
             else:
                 raise TypeError(f"The object {label} in family_label (ProteinDomainDataset.collate_fn) was of type {type(label)}, which is not supported.\
