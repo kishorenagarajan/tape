@@ -8,6 +8,7 @@ from .modeling_utils import ProteinConfig
 from .modeling_utils import ProteinModel
 from .modeling_utils import ValuePredictionHead
 from .modeling_utils import SequenceClassificationHead
+from .modeling_utils import MultiLabelClassificationHead
 from .modeling_utils import SequenceToSequenceClassificationHead
 from .modeling_utils import PairwiseContactPredictionHead
 from ..registry import registry
@@ -223,6 +224,27 @@ class UniRepForSequenceClassification(UniRepAbstractModel):
         sequence_output, pooled_output = outputs[:2]
         outputs = self.classify(pooled_output, targets) + outputs[2:]
         # (loss), prediction_scores, (hidden_states)
+        return outputs
+
+
+@registry.register_task_model('protein_domain', 'unirep')
+class ProteinUniRepForMultiLabelClassification(UniRepAbstractModel):
+    def __init__(self, config):
+        super().__init__(config)
+
+        self.unirep = UniRepModel(config)
+        self.classify = MultiLabelClassificationHead(
+            config.hidden_size, config.num_labels)
+
+        self.init_weights()
+
+    def forward(self, input_ids, input_mask=None, targets=None):
+        outputs = self.unirep(input_ids, input_mask=input_mask)
+
+        sequence_output, pooled_output = outputs[:2]
+
+        outputs = self.classify(pooled_output, targets) + outputs[2:]
+        # (loss), prediction_scores, (hidden_states), (attentions)
         return outputs
 
 

@@ -8,6 +8,7 @@ from .modeling_utils import ProteinConfig
 from .modeling_utils import ProteinModel
 from .modeling_utils import ValuePredictionHead
 from .modeling_utils import SequenceClassificationHead
+from .modeling_utils import MultiLabelClassificationHead
 from .modeling_utils import SequenceToSequenceClassificationHead
 from .modeling_utils import PairwiseContactPredictionHead
 from ..registry import registry
@@ -91,6 +92,27 @@ class ProteinOneHotForValuePrediction(ProteinOneHotAbstractModel):
         return outputs
 
 
+@registry.register_task_model('protein_domain', 'onehot')
+class ProteinOneHotForMultiLabelClassification(ProteinOneHotAbstractModel):
+    def __init__(self, config):
+        super().__init__(config)
+
+        self.onehot = ProteinOneHotModel(config)
+        self.classify = MultiLabelClassificationHead(
+            config.hidden_size, config.num_labels)
+
+        self.init_weights()
+
+    def forward(self, input_ids, input_mask=None, targets=None):
+        outputs = self.onehot(input_ids, input_mask=input_mask)
+
+        sequence_output, pooled_output = outputs[:2]
+
+        outputs = self.classify(pooled_output, targets) + outputs[2:]
+        # (loss), prediction_scores, (hidden_states), (attentions)
+        return outputs
+
+
 @registry.register_task_model('remote_homology', 'onehot')
 class ProteinOneHotForSequenceClassification(ProteinOneHotAbstractModel):
 
@@ -153,3 +175,5 @@ class ProteinOneHotForContactPrediction(ProteinOneHotAbstractModel):
         outputs = self.predict(sequence_output, protein_length, targets) + outputs[2:]
         # (loss), prediction_scores, (hidden_states), (attentions)
         return outputs
+
+
