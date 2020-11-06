@@ -11,8 +11,6 @@ from torch.utils.data import DataLoader, RandomSampler, Dataset
 from torch.utils.data.distributed import DistributedSampler
 from ..optimization import AdamW
 
-from ..over9000 import RangerLars
-
 from ..registry import registry
 
 from .utils import get_effective_batch_size
