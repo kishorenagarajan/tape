@@ -33,6 +33,7 @@ from .modeling_utils import LayerNorm
 from .modeling_utils import MLMHead
 from .modeling_utils import ValuePredictionHead
 from .modeling_utils import SequenceClassificationHead
+from .modeling_utils import MultiLabelClassificationHead
 from .modeling_utils import SequenceToSequenceClassificationHead
 from .modeling_utils import PairwiseContactPredictionHead
 from ..registry import registry
@@ -511,7 +512,6 @@ class ProteinBertForValuePrediction(ProteinBertAbstractModel):
         # (loss), prediction_scores, (hidden_states), (attentions)
         return outputs
 
-
 @registry.register_task_model('remote_homology', 'transformer')
 class ProteinBertForSequenceClassification(ProteinBertAbstractModel):
 
@@ -533,6 +533,30 @@ class ProteinBertForSequenceClassification(ProteinBertAbstractModel):
         outputs = self.classify(pooled_output, targets) + outputs[2:]
         # (loss), prediction_scores, (hidden_states), (attentions)
         return outputs
+
+
+################### CKM CODE ###################
+@registry.register_task_model('protein_domain', 'transformer')
+class ProteinBertForMultiLabelClassification(ProteinBertAbstractModel):
+    def __init__(self, config):
+        super().__init__(config)
+
+        self.bert = ProteinBertModel(config)
+        self.classify = MultiLabelClassificationHead(
+            config.hidden_size, config.num_labels)
+
+        self.init_weights()
+
+    def forward(self, input_ids, input_mask=None, targets=None):
+        outputs = self.bert(input_ids, input_mask=input_mask)
+
+        sequence_output, pooled_output = outputs[:2]
+
+        outputs = self.classify(pooled_output, targets) + outputs[2:]
+        # (loss), prediction_scores, (hidden_states), (attentions)
+        return outputs
+
+################# END CKM CODE #################
 
 
 @registry.register_task_model('secondary_structure', 'transformer')

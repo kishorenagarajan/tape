@@ -234,8 +234,9 @@ class NPZDataset(Dataset):
 
         self._file_list = file_list
 
+    # THIS WAS CHANGED BY US. CHANGED length to fix amount at 50.
     def __len__(self) -> int:
-        return len(self._file_list)
+        return 50;
 
     def __getitem__(self, index: int):
         if not 0 <= index < len(self):
@@ -547,6 +548,75 @@ class RemoteHomologyDataset(Dataset):
         return {'input_ids': input_ids,
                 'input_mask': input_mask,
                 'targets': fold_label}
+
+################### CKM CODE ###################
+
+#register in BERT for testing until other model
+@registry.register_task('protein_domain', num_labels=18259)
+class ProteinDomainDataset(Dataset):
+    def __init__(self,
+                 data_path: Union[str, Path],
+                 split: str,
+                 tokenizer: Union[str, TAPETokenizer] = 'iupac',
+                 in_memory: bool = False):
+        # need to change the labels by looking at the pfam data
+        if split not in ('train', 'valid', 'holdout'):
+            raise ValueError(f"Unrecognized split: {split}. Must be one of "
+                             f"['train', 'valid', 'holdout',")
+        if isinstance(tokenizer, str):
+            tokenizer = TAPETokenizer(vocab=tokenizer)
+        self.tokenizer = tokenizer
+
+        data_path = Path(data_path)
+        data_file = f'domain_{split}.lmdb'
+        self.data = dataset_factory(data_path / data_file, in_memory)
+    
+    def __len__(self) -> int:
+        return 100000;
+
+    def __getitem__(self, index: int):
+        item = self.data[index]
+        token_ids = self.tokenizer.encode(item['primary'])
+        input_mask = np.ones_like(token_ids)
+    # Changed fold_label in remote homology dataset to family_label (MAY NEED TO CHANGE to just "family")
+        return token_ids, input_mask, item['domains']
+    
+    # Might need to add another parameter to collate? What do we need to do to this method?
+    def collate_fn(self, batch: List[Tuple[Any, ...]]) -> Dict[str, torch.Tensor]:
+        input_ids, input_mask, family_label = tuple(zip(*batch))
+
+        fn_domain = list(range(18259))
+        for class_num in family_label:
+            if class_num in fn_domain:
+                fn_domain.remove(class_num)
+
+        family_label_multihot = []
+        for label in family_label:
+            family_label_multihot_part = [0] * 18259
+            if isinstance(label, int):
+                index = family_label.index(label)
+                family_label_multihot_part[family_label[index]] = 1
+            elif isinstance(label, list):
+                for elem in label:
+                    index = label.index(elem)
+                    family_label_multihot_part[label[index]] = 1
+            else:
+                raise TypeError(f"The object {label} in family_label (ProteinDomainDataset.collate_fn) was of type {type(label)}, which is not supported.\
+                Please input either an {type(1)} or a {type([1])}")
+
+            family_label_multihot.append(family_label_multihot_part)
+
+        family_label_multihot = tuple(family_label_multihot)
+
+        input_ids = torch.from_numpy(pad_sequences(input_ids, 0))
+        input_mask = torch.from_numpy(pad_sequences(input_mask, 0))
+        family_label = torch.HalfTensor(family_label_multihot)  # type: ignore
+
+        return {'input_ids': input_ids,
+                'input_mask': input_mask,
+                'targets': family_label}
+
+################# END CKM CODE #################
 
 
 @registry.register_task('contact_prediction')
