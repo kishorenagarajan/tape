@@ -590,10 +590,23 @@ class ProteinDomainDataset(Dataset):
             if class_num in fn_domain:
                 fn_domain.remove(class_num)
 
-        family_label_multihot = [[0]*18259]*len(family_label)
+        family_label_multihot = []
         for label in family_label:
-            index = family_label.index(label)
-            family_label_multihot[index][family_label[index]] = 1
+            family_label_multihot_part = [0] * 18259
+            if isinstance(label, int):
+                index = family_label.index(label)
+                family_label_multihot_part[family_label[index]] = 1
+            elif isinstance(label, list):
+                for elem in label:
+                    index = family_label.index(elem)
+                    family_label_multihot_part[label[index]] = 1
+            else:
+                raise TypeError(f"The object {label} in family_label (ProteinDomainDataset.collate_fn) was of type {type(label)}, which is not supported.\
+                Please input either an {type(1)} or a {type([1])}")
+
+            family_label_multihot.append(family_label_multihot_part)
+
+        family_label_multihot = tuple(family_label_multihot)
 
         input_ids = torch.from_numpy(pad_sequences(input_ids, 0))
         input_mask = torch.from_numpy(pad_sequences(input_mask, 0))

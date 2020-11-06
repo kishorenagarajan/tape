@@ -674,7 +674,7 @@ def scores(y_true: torch.Tensor, y_pred: torch.Tensor) -> torch.Tensor:
 
     f1 = 2 * (precision * recall) / (precision + recall + epsilon)
 
-    return torch.vstack((f1, precision, recall, accuracy))
+    return torch.stack((f1, precision, recall, accuracy))
 
 ######################## DR GOODSON'S CODE ########################
 
