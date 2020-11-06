@@ -204,7 +204,6 @@ class UniRepForValuePrediction(UniRepAbstractModel):
         # (loss), prediction_scores, (hidden_states)
         return outputs
 
-@registry.register_task_model('protein_domain', 'unirep')
 @registry.register_task_model('remote_homology', 'unirep')
 class UniRepForSequenceClassification(UniRepAbstractModel):
 

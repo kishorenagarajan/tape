@@ -627,7 +627,6 @@ def accuracy(logits, labels, ignore_index: int = -100):
         correct = (predictions == labels) * valid_mask
         return correct.sum().float() / valid_mask.sum().float()
 
-######################## DR GOODSON'S CODE ########################
 
 def optimize_thresholds(c: torch.Tensor, y: torch.Tensor):
 
@@ -641,7 +640,6 @@ def optimize_thresholds(c: torch.Tensor, y: torch.Tensor):
             if tscore[0] > pre_m[0]:
                 best_metrics[i], best_t[i] = tscore, t
     return best_t, best_metrics
-
 
 
 def scores(y_true: torch.Tensor, y_pred: torch.Tensor) -> torch.Tensor:
@@ -675,8 +673,6 @@ def scores(y_true: torch.Tensor, y_pred: torch.Tensor) -> torch.Tensor:
     f1 = 2 * (precision * recall) / (precision + recall + epsilon)
 
     return torch.stack((f1, precision, recall, accuracy))
-
-######################## DR GOODSON'S CODE ########################
 
 
 def gelu(x):
@@ -863,7 +859,6 @@ class SequenceClassificationHead(nn.Module):
 
         return outputs  # (loss), logits
 
-################### CKM CODE ###################
 
 class MultiLabelClassificationHead(nn.Module):
     def __init__(self, hidden_size: int, num_labels: int):
@@ -877,7 +872,6 @@ class MultiLabelClassificationHead(nn.Module):
         if targets is not None:
             loss_fct = nn.BCEWithLogitsLoss()
             classification_loss = loss_fct(logits, targets)
-#            metrics = {'accuracy': accuracy(logits, targets)}
 
             # Roughly calculate best thresholds per-sequence based on F1-score
             thresholds, metrics = optimize_thresholds(logits, targets)
@@ -894,8 +888,6 @@ class MultiLabelClassificationHead(nn.Module):
             outputs = (loss_and_metrics,) + outputs
 
         return outputs  # (loss), logits
-
-################# END CKM CODE #################
 
 
 class SequenceToSequenceClassificationHead(nn.Module):

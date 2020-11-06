@@ -232,7 +232,7 @@ class ProteinLSTMForValuePrediction(ProteinLSTMAbstractModel):
         # (loss), prediction_scores, (hidden_states)
         return outputs
 
-@registry.register_task_model('protein_domain', 'lstm')
+
 @registry.register_task_model('remote_homology', 'lstm')
 class ProteinLSTMForSequenceClassification(ProteinLSTMAbstractModel):
 

@@ -535,7 +535,6 @@ class ProteinBertForSequenceClassification(ProteinBertAbstractModel):
         return outputs
 
 
-################### CKM CODE ###################
 @registry.register_task_model('protein_domain', 'transformer')
 class ProteinBertForMultiLabelClassification(ProteinBertAbstractModel):
     def __init__(self, config):
@@ -555,8 +554,6 @@ class ProteinBertForMultiLabelClassification(ProteinBertAbstractModel):
         outputs = self.classify(pooled_output, targets) + outputs[2:]
         # (loss), prediction_scores, (hidden_states), (attentions)
         return outputs
-
-################# END CKM CODE #################
 
 
 @registry.register_task_model('secondary_structure', 'transformer')
