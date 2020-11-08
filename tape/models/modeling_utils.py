@@ -874,9 +874,9 @@ class MultiLabelClassificationHead(nn.Module):
             classification_loss = loss_fct(logits, targets)
 
             # Roughly calculate best thresholds per-sequence based on F1-score
-            thresholds, metrics = optimize_thresholds(logits.detach(), targets)
+            soft_metrics = scores(logits, targets)
 
-            f1, precision, recall, accuracy = metrics.mean(0)
+            f1, precision, recall, accuracy = soft_metrics.mean(1)
 
             metrics = {
                 'f1_score': f1,
@@ -884,7 +884,7 @@ class MultiLabelClassificationHead(nn.Module):
                 'recall': recall,
                 'accuracy': accuracy,
             }
-            loss_and_metrics = (classification_loss, metrics)
+            loss_and_metrics = (classification_loss + f1, metrics)
             outputs = (loss_and_metrics,) + outputs
 
         return outputs  # (loss), logits
