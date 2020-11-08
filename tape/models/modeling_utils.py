@@ -884,7 +884,7 @@ class MultiLabelClassificationHead(nn.Module):
                 'recall': recall,
                 'accuracy': accuracy,
             }
-            loss_and_metrics = (classification_loss + f1, metrics)
+            loss_and_metrics = (classification_loss + (1-f1), metrics)
             outputs = (loss_and_metrics,) + outputs
 
         return outputs  # (loss), logits
