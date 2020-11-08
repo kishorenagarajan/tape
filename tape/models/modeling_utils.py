@@ -642,9 +642,8 @@ def optimize_thresholds(c: torch.Tensor, y: torch.Tensor):
     return best_t, best_metrics
 
 
-def scores(y_true: torch.Tensor, y_pred: torch.Tensor) -> torch.Tensor:
-    '''Calculate F1 score. Can work with gpu tensors
-    The original implmentation is written by Michal Haltuf on Kaggle.
+def scores(y_true: torch.Tensor, y_logit: torch.Tensor) -> torch.Tensor:
+    '''Calculate various metrics
     Returns
     -------
     torch.Tensor
@@ -657,20 +656,22 @@ def scores(y_true: torch.Tensor, y_pred: torch.Tensor) -> torch.Tensor:
     '''
 
     assert y_true.ndim in (1,2)
-    assert y_pred.ndim in (1,2)
-
-    tp = (y_true * y_pred).sum(-1).to(torch.float32)
-    tn = ((1 - y_true) * (1 - y_pred)).sum(-1).to(torch.float32)
-    fp = ((1 - y_true) * y_pred).sum(-1).to(torch.float32)
-    fn = (y_true * (1 - y_pred)).sum(-1).to(torch.float32)
+    assert y_logit.ndim in (1, 2)
 
     epsilon = 1e-7
+
+    y_true = torch.log((y_true + epsilon) * (1-epsilon))
+
+    tp = torch.exp(y_true + y_logit).sum(-1)
+    tn = torch.exp(torch.log(1-torch.exp(y_true)) + torch.log(1 - torch.exp(y_logit))).sum(-1)
+    fp = torch.exp(torch.log(1-torch.exp(y_true)) + y_logit).sum(-1)
+    fn = torch.exp(y_true + torch.log(1 - torch.exp(y_logit))).sum(-1)
 
     precision = tp / (tp + fp + epsilon)
     recall = tp / (tp + fn + epsilon)
     accuracy = (tp + tn) / (tp + tn + fp + fn)
 
-    f1 = 2 * (precision * recall) / (precision + recall + epsilon)
+    f1 = 2 * tp / (2 * tp + fn + fp + epsilon)
 
     return torch.stack((f1, precision, recall, accuracy))
 
@@ -870,11 +871,7 @@ class MultiLabelClassificationHead(nn.Module):
         outputs = (logits,)
 
         if targets is not None:
-            loss_fct = nn.BCEWithLogitsLoss()
-            classification_loss = loss_fct(logits, targets)
-
-            # Roughly calculate best thresholds per-sequence based on F1-score
-            soft_metrics = scores(logits, targets)
+            soft_metrics = scores(targets, nn.functional.logsigmoid(logits))
 
             f1, precision, recall, accuracy = soft_metrics.mean(1)
 
@@ -884,7 +881,7 @@ class MultiLabelClassificationHead(nn.Module):
                 'recall': recall,
                 'accuracy': accuracy,
             }
-            loss_and_metrics = (classification_loss + (1-f1), metrics)
+            loss_and_metrics = ((1-f1), metrics)
             outputs = (loss_and_metrics,) + outputs
 
         return outputs  # (loss), logits
