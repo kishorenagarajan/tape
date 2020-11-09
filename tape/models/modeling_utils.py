@@ -871,6 +871,8 @@ class MultiLabelClassificationHead(nn.Module):
         outputs = (logits,)
 
         if targets is not None:
+            loss_fct = nn.BCEWithLogitsLoss()
+            classification_loss = loss_fct(logits, targets)
             soft_metrics = scores(targets, nn.functional.logsigmoid(logits))
 
             f1, precision, recall, accuracy = soft_metrics.mean(1)
@@ -881,7 +883,7 @@ class MultiLabelClassificationHead(nn.Module):
                 'recall': recall,
                 'accuracy': accuracy,
             }
-            loss_and_metrics = ((1-f1), metrics)
+            loss_and_metrics = (classification_loss, metrics)
             outputs = (loss_and_metrics,) + outputs
 
         return outputs  # (loss), logits

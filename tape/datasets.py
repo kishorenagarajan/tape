@@ -588,7 +588,25 @@ class ProteinDomainDataset(Dataset):
         token_ids = self.tokenizer.encode(item['primary'])
         input_mask = np.ones_like(token_ids)
         return token_ids, input_mask, item['domains']
-    
+
+    def build_pos_counter(self, domain_num):
+        pos_counter = 0
+        for protein_num in range(self.__len__()):
+            domains = np.array(self.__getitem__(protein_num)[2])
+            if domain_num in domains:
+                pos_counter += 1
+        return pos_counter
+
+    def build_pos_weights(self):
+        import os
+        pos_weights = np.ones(18259)
+        for domain in range(18259):
+            pos_count = self.build_pos_counter(domain)
+            pos_weights[domain] = (self.__len__() - pos_count)/pos_count
+
+        return pos_weights
+
+
     def collate_fn(self, batch: List[Tuple[Any, ...]]) -> Dict[str, torch.Tensor]:
         input_ids, input_mask, family_label = tuple(zip(*batch))
 
@@ -601,9 +619,12 @@ class ProteinDomainDataset(Dataset):
         input_mask = torch.from_numpy(pad_sequences(input_mask, 0))
         family_label = torch.from_numpy(family_label_multihot)  # type: ignore
 
+        pos_weights = self.build_pos_weights()
+
         return {'input_ids': input_ids,
                 'input_mask': input_mask,
-                'targets': family_label}
+                'targets': family_label,
+                'pos_weights': pos_weights}
 
 
 @registry.register_task('contact_prediction')

@@ -551,7 +551,7 @@ class ProteinBertForMultiLabelClassification(ProteinBertAbstractModel):
 
         sequence_output, pooled_output = outputs[:2]
 
-        outputs = self.classify(pooled_output, targets) + outputs[2:]
+        outputs = self.classify(pooled_output, targets) + outputs
         # (loss), prediction_scores, (hidden_states), (attentions)
         return outputs
 
